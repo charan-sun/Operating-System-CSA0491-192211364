@@ -1,0 +1,105 @@
+
+class Process:
+    def __init__(self, pid, arrival_time, burst_time):
+        self.pid = pid
+        self.arrival_time = arrival_time
+        self.burst_time = burst_time
+        self.remaining_time = burst_time
+        self.completed = False
+
+    def __repr__(self):
+        return f"Process {self.pid} (Arrival Time: {self.arrival_time}, Burst Time: {self.burst_time})"
+
+
+class Scheduler:
+    def __init__(self, processes):
+        self.processes = processes
+
+    def fcfs(self):
+        current_time = 0
+        waiting_time = 0
+        for process in self.processes:
+            if current_time < process.arrival_time:
+                current_time = process.arrival_time
+            waiting_time += current_time - process.arrival_time
+            print(f"Running process {process.pid} at time {current_time}")
+            current_time += process.burst_time
+            print(f"Process {process.pid} completed at time {current_time}")
+        avg_waiting_time = waiting_time / len(self.processes)
+        return current_time, avg_waiting_time
+
+    def sjf(self):
+        sorted_processes = sorted(self.processes, key=lambda x: (x.arrival_time, x.burst_time))
+        current_time = 0
+        waiting_time = 0
+        for process in sorted_processes:
+            if current_time < process.arrival_time:
+                current_time = process.arrival_time
+            waiting_time += current_time - process.arrival_time
+            print(f"Running process {process.pid} at time {current_time}")
+            current_time += process.burst_time
+            print(f"Process {process.pid} completed at time {current_time}")
+        avg_waiting_time = waiting_time / len(self.processes)
+        return current_time, avg_waiting_time
+
+    def round_robin(self, time_slice):
+        current_time = 0
+        waiting_time = 0
+        while any(not process.completed for process in self.processes):
+            for process in self.processes:
+                if not process.completed and current_time >= process.arrival_time:
+                    if process.remaining_time > time_slice:
+                        print(f"Running process {process.pid} at time {current_time}")
+                        waiting_time += current_time - process.arrival_time
+                        current_time += time_slice
+                        process.remaining_time -= time_slice
+                    else:
+                        print(f"Running process {process.pid} at time {current_time}")
+                        waiting_time += current_time - process.arrival_time
+                        current_time += process.remaining_time
+                        process.remaining_time = 0
+                        process.completed = True
+                        print(f"Process {process.pid} completed at time {current_time}")
+        avg_waiting_time = waiting_time / len(self.processes)
+        return current_time, avg_waiting_time
+
+
+def main():
+    n = int(input("Enter the number of processes: "))
+    processes = []
+
+    # Input process details
+    for i in range(n):
+        pid = i + 1
+        arrival_time = int(input(f"Enter arrival time for process {pid}: "))
+        burst_time = int(input(f"Enter burst time for process {pid}: "))
+        processes.append(Process(pid, arrival_time, burst_time))
+
+    # Sort processes based on arrival time
+    processes.sort(key=lambda x: x.arrival_time)
+
+    # Create Scheduler instance
+    scheduler = Scheduler(processes)
+
+    # FCFS
+    print("\nFCFS:")
+    fcfs_finish_time, avg_fcfs_waiting_time = scheduler.fcfs()
+    print(f"Average Waiting Time (FCFS): {avg_fcfs_waiting_time}")
+    print(f"Average Turnaround Time (FCFS): {fcfs_finish_time / n}\n")
+
+    # SJF
+    print("\nSJF:")
+    sjf_finish_time, avg_sjf_waiting_time = scheduler.sjf()
+    print(f"Average Waiting Time (SJF): {avg_sjf_waiting_time}")
+    print(f"Average Turnaround Time (SJF): {sjf_finish_time / n}\n")
+
+    # Round Robin
+    time_slice = int(input("\nEnter time slice for Round Robin: "))
+    print("\nRound Robin:")
+    rr_finish_time, avg_rr_waiting_time = scheduler.round_robin(time_slice)
+    print(f"Average Waiting Time (Round Robin): {avg_rr_waiting_time}")
+    print(f"Average Turnaround Time (Round Robin): {rr_finish_time / n}")
+
+
+if __name__ == "__main__":
+    main()
